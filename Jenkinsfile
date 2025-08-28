@@ -10,7 +10,7 @@ pipeline {
 
   stages {
     stage('Checkout') {
-      agent { label 'nodejs-build' }
+      agent { label 'nodejs18' }
       steps {
         checkout scm
         stash includes: '**', name: 'source'
