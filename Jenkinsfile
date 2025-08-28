@@ -10,7 +10,7 @@ pipeline {
 
   stages {
     stage('Checkout') {
-      agent { label 'nodejs18' }
+      agent { label 'nodejs-build' }
       steps {
         checkout scm
         stash includes: '**', name: 'source'
@@ -18,7 +18,7 @@ pipeline {
     }
 
     stage('Build Node.js') {
-      agent { label 'nodejs18' }
+      agent { label 'nodejs-build' }
       environment {
         NPM_CONFIG_PREFIX = '/tmp/.npm-global'
         PATH = "/tmp/.npm-global/bin:${env.PATH}"
