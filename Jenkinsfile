@@ -5,7 +5,7 @@ pipeline {
     REGISTRY   = 'image-registry.openshift-image-registry.svc:5000'
     NAMESPACE  = 'ac-test'  // namespace của bạn
     IMAGE_NAME = 'test'
-    IMAGE_TAG  = "${env.BUILD_NUMBER}"
+    IMAGE_TAG  = 'latest'
   }
 
   stages {
@@ -44,11 +44,16 @@ pipeline {
         unstash 'build'
         container('kaniko') {
           sh '''
-            /kaniko/executor \
-              --context="${WORKSPACE}" \
-              --dockerfile="${WORKSPACE}/Dockerfile" \
-              --destination="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}" \
-              --verbosity=info
+        set -xe
+        echo "DEST = ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
+        test -f /kaniko/.docker/config.json && echo "Found Docker auth" || (echo "Missing /kaniko/.docker/config.json" && exit 1)
+        test -f "${WORKSPACE}/Dockerfile" || (echo "Missing Dockerfile at ${WORKSPACE}/Dockerfile" && exit 1)
+
+        /kaniko/executor \
+          --context="${WORKSPACE}" \
+          --dockerfile="${WORKSPACE}/Dockerfile" \
+          --destination="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}" \
+          --verbosity=info
           '''
         }
       }
