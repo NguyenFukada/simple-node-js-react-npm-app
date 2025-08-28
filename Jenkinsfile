@@ -44,18 +44,7 @@ pipeline {
       steps {
         unstash 'build'
         container('kaniko') {
-          sh '''
-        set -xe
-        echo "DEST = ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
-        test -f /kaniko/.docker/config.json && echo "Found Docker auth" || (echo "Missing /kaniko/.docker/config.json" && exit 1)
-        test -f "${WORKSPACE}/Dockerfile" || (echo "Missing Dockerfile at ${WORKSPACE}/Dockerfile" && exit 1)
-
-        /kaniko/executor \
-          --context="${WORKSPACE}" \
-          --dockerfile="${WORKSPACE}/Dockerfile" \
-          --destination="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}" \
-          --verbosity=info
-          '''
+          sh '/kaniko/executor --context=`pwd` --dockerfile=`pwd`/Dockerfile  --destination=default-route-openshift-image-registry.apps.staging.xplat.online/ac-test/test:latest'
         }
       }
     }
