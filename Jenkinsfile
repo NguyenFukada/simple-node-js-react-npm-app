@@ -1,24 +1,18 @@
 pipeline {
-  agent {
-    kubernetes {
-      yaml '''
-        apiVersion: v1
-        kind: Pod
-        spec:
-          containers:
-          - name: maven
-            image: maven:alpine
-            command:
-            - cat
-            tty: true
-        '''
-    }
+  agent { label 'nodejs' }  // dùng Pod Template đã tạo ở trên
+  environment {
+    NPM_CONFIG_PREFIX = '/tmp/.npm-global'
+    PATH = "/tmp/.npm-global/bin:${env.PATH}"
   }
   stages {
-    stage('Run maven') {
+    stage('Build') {
       steps {
-        container('maven') {
-          sh 'mvn -version'
+        container('node') {
+          sh 'set -x; whoami; pwd; which sh'
+          sh 'mkdir -p "$NPM_CONFIG_PREFIX"'
+          sh 'node -v && npm -v'
+          sh 'npm ci --no-audit --no-fund --prefer-offline'
+          sh 'npm run build || echo "No build script"'
         }
       }
     }
