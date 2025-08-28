@@ -1,14 +1,24 @@
 pipeline {
-  agent { label 'nodejs' } // dùng PodTemplate label 'nodejs'
-  environment {
-    NPM_CONFIG_PREFIX = '/tmp/.npm-global'
-    PATH = "/tmp/.npm-global/bin:${env.PATH}"
+  agent {
+    kubernetes {
+      yaml '''
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+          - name: maven
+            image: maven:alpine
+            command:
+            - cat
+            tty: true
+        '''
+    }
   }
   stages {
-    stage('Build') {
+    stage('Run maven') {
       steps {
-        container('node') {
-          sh 'npm install'
+        container('maven') {
+          sh 'mvn -version'
         }
       }
     }
