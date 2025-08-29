@@ -44,8 +44,17 @@ pipeline {
       steps {
         unstash 'build'
         container('kaniko') {
-          sh '/kaniko/executor --context=`pwd` --dockerfile=`pwd`/Dockerfile  --destination=default-route-openshift-image-registry.apps.staging.xplat.online/ac-test/test:latest'
-        }
+         sh """
+        set -xe
+        test -f /kaniko/.docker/config.json
+        test -f "${env.WORKSPACE}/Dockerfile"
+
+        /kaniko/executor \
+          --context="${env.WORKSPACE}" \
+          --dockerfile="${env.WORKSPACE}/Dockerfile" \
+          --destination="${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}" \
+          --verbosity=info
+      """
       }
     }
   }
