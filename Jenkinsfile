@@ -44,7 +44,7 @@ pipeline {
       steps {
         unstash 'build'
         container('kaniko') {
-          sh '/kaniko/executor --context=`pwd` --dockerfile=`pwd`/Dockerfile  --destination=nguyenquoccuong/test:latest'
+          sh '/kaniko/executor --force --context=`pwd` --dockerfile=`pwd`/Dockerfile  --destination=nguyenquoccuong/test:latest'
         }
       }
     }
