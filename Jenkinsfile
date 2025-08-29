@@ -44,15 +44,7 @@ pipeline {
       steps {
         unstash 'build'
         container('kaniko') {
-          sh """
-    test -f /kaniko/.docker/config.json && echo "Docker config found" || (echo "Missing config.json"; ls -la /kaniko/.docker; exit 1)
-          
-    /kaniko/executor --force --context="${env.WORKSPACE}" --dockerfile="${env.WORKSPACE}/Dockerfile" \
-                     --destination="${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}" \
-                     --registry-certificate="${env.REGISTRY}=/kaniko/ssl/certs/service-ca.crt" \
-                     --verbosity=info \
-                     --skip-tls-verify
-  """
+          sh '/kaniko/executor --context=`pwd` --dockerfile=`pwd`/Dockerfile  --destination=nguyenquoccuong/test:latest'
         }
       }
     }
