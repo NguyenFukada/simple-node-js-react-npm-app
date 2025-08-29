@@ -40,17 +40,18 @@ pipeline {
     }
 
     stage('Build & Push Image') {
-      agent { label 'docker-build' }
+      agent { label 'kaniko-build' }
       steps {
         unstash 'build'
         container('kaniko') {
-      sh '''
+          sh '''
         /kaniko/executor \
           --context="${WORKSPACE}" \
           --dockerfile="${WORKSPACE}/Dockerfile" \
           --destination="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}" \
           --verbosity=info
       '''
+        }
       }
     }
   }
