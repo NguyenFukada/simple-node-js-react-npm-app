@@ -45,11 +45,7 @@ pipeline {
         unstash 'build'
         container('kaniko') {
           sh '''
-        /kaniko/executor \
-          --context="${WORKSPACE}" \
-          --dockerfile="${WORKSPACE}/Dockerfile" \
-          --destination="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}" \
-          --verbosity=info
+        /kaniko/executor --context="${WORKSPACE}" --dockerfile="${WORKSPACE}/Dockerfile" --destination="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}" --verbosity=info
       '''
         }
       }
