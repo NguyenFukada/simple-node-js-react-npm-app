@@ -45,34 +45,11 @@ pipeline {
         unstash 'build'
         container('kaniko') {
           sh """
-    set -xe
-
-    # 1) Lấy token của SA trong pod & tạo docker config tại chỗ
-    mkdir -p /kaniko/.docker
-    TOKEN=\$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-    # base64 'serviceaccount:<token>' (busybox/gnu base64 khác tham số -w, nên dùng cách tương thích)
-    AUTH=\$(printf 'serviceaccount:%s' "\$TOKEN" | base64 | tr -d '\\n')
-
-    cat > /kaniko/.docker/config.json <<'JSON'
-    {
-      "auths": {
-        "image-registry.openshift-image-registry.svc:5000": {
-          "auth": "REPLACE_AUTH"
-        }
-      }
-    }
-    JSON
-    sed -i "s|REPLACE_AUTH|\$AUTH|g" /kaniko/.docker/config.json
-    echo "==== /kaniko/.docker/config.json ===="
-    cat /kaniko/.docker/config.json
-
-    # 2) Dùng CA nội bộ cho internal registry (bạn đã mount svc-ca -> /kaniko/ssl/certs/service-ca.crt)
-    test -s /kaniko/ssl/certs/service-ca.crt
-
     /kaniko/executor --force --context="${env.WORKSPACE}" --dockerfile="${env.WORKSPACE}/Dockerfile" \
                      --destination="${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}" \
                      --registry-certificate="${env.REGISTRY}=/kaniko/ssl/certs/service-ca.crt" \
-                     --verbosity=info
+                     --verbosity=info \
+                     --skip-tls-verify
   """
         }
       }
