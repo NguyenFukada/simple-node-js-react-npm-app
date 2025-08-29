@@ -44,17 +44,13 @@ pipeline {
       steps {
         unstash 'build'
         container('kaniko') {
-         sh """
-        set -xe
-        test -f /kaniko/.docker/config.json
-        test -f "${env.WORKSPACE}/Dockerfile"
-
+      sh '''
         /kaniko/executor \
-          --context="${env.WORKSPACE}" \
-          --dockerfile="${env.WORKSPACE}/Dockerfile" \
-          --destination="${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}" \
+          --context="${WORKSPACE}" \
+          --dockerfile="${WORKSPACE}/Dockerfile" \
+          --destination="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}" \
           --verbosity=info
-      """
+      '''
       }
     }
   }
