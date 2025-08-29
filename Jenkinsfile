@@ -44,9 +44,7 @@ pipeline {
       steps {
         unstash 'build'
         container('kaniko') {
-          sh '''
-        /kaniko/executor --context="${WORKSPACE}" --dockerfile="${WORKSPACE}/Dockerfile" --destination="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}" --verbosity=info
-      '''
+          sh '/kaniko/executor --context=`pwd` --dockerfile=`pwd`/Dockerfile  --destination=image-registry.openshift-image-registry.svc:5000/test:latest'
         }
       }
     }
