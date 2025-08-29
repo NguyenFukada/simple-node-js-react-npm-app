@@ -3,7 +3,7 @@ pipeline {
 
   environment {
     DOCKER_CONFIG = '/kaniko/.docker'
-    REGISTRY   = 'image-registry.openshift-image-registry.svc:5000'
+    REGISTRY   = 'default-route-openshift-image-registry.apps.staging.xplat.online'
     NAMESPACE  = 'ac-test'  // namespace của bạn
     IMAGE_NAME = 'test'
     IMAGE_TAG  = 'latest'
