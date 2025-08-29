@@ -3,7 +3,7 @@ pipeline {
 
   environment {
     DOCKER_CONFIG = '/kaniko/.docker'
-    REGISTRY   = 'default-route-openshift-image-registry.apps.staging.xplat.online'
+    REGISTRY   = 'image-registry.openshift-image-registry.svc:5000'
     NAMESPACE  = 'ac-test'  // namespace của bạn
     IMAGE_NAME = 'test'
     IMAGE_TAG  = 'latest'
@@ -49,6 +49,7 @@ pipeline {
     which /kaniko/executor
     /kaniko/executor --force --context="${env.WORKSPACE}" --dockerfile="${env.WORKSPACE}/Dockerfile" \
                      --destination="${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}" \
+                     --registry-certificate="${env.REGISTRY}=/kaniko/ssl/certs/service-ca.crt" \
                      --verbosity=info
   """
         }
