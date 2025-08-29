@@ -47,7 +47,7 @@ pipeline {
           sh """
     set -xe
     which /kaniko/executor
-    /kaniko/executor --context="${env.WORKSPACE}" --dockerfile="${env.WORKSPACE}/Dockerfile" \
+    /kaniko/executor --force --context="${env.WORKSPACE}" --dockerfile="${env.WORKSPACE}/Dockerfile" \
                      --destination="${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}" \
                      --verbosity=info
   """
