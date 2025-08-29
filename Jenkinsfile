@@ -40,7 +40,7 @@ pipeline {
     }
 
     stage('Build & Push Image') {
-      agent { label 'kaniko-build' }
+      agent { label 'docker-build' }
       steps {
         unstash 'build'
         container('kaniko') {
