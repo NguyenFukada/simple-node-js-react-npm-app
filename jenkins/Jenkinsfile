@@ -12,6 +12,15 @@ pipeline {
     booleanParam(name: 'TLSVERIFY', defaultValue: false, description: 'Verify TLS khi login/push (false nếu registry dùng self-signed)')
   }
 
+    stage('Checkout') {
+      agent { label 'nodejs-build' }
+      steps {
+        checkout scm
+        stash includes: '**', name: 'source'
+      }
+    }
+
+
   stages {
     stage('Build Node.js') {
       agent { label 'nodejs-build' } // node có container 'node'
