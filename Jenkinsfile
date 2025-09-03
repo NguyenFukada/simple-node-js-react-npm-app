@@ -1,13 +1,5 @@
 pipeline {
-  agent none   // không dùng agent global, mỗi stage chọn agent riêng
-
-  environment {
-    DOCKER_CONFIG = '/kaniko/.docker'
-    REGISTRY   = 'image-registry.openshift-image-registry.svc:5000'
-    NAMESPACE  = 'ac-test'  // namespace của bạn
-    IMAGE_NAME = 'test'
-    IMAGE_TAG  = 'latest'
-  }
+  agent none   
 
   stages {
     stage('Checkout') {
