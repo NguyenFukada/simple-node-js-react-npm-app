@@ -64,7 +64,7 @@ pipeline {
 
   post {
     success {
-      echo " Image pushed: ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
+      echo " Image pushed successfully"
     }
   }
 }
