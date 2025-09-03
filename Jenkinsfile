@@ -32,7 +32,7 @@ pipeline {
     }
 
     stage('Build & Push Image') {
-      agent { label 'docker-build' }
+      agent { label 's2i-nodejs-fe' }
       steps {
         unstash 'build'
         container('buildah') {
