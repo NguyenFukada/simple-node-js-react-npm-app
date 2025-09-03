@@ -33,6 +33,9 @@ pipeline {
 
     stage('Build & Push Image') {
       agent { kubernetes { inheritFrom 's2i-nodejs-fe'} }
+      environment {
+        REGISTRY_HOST = 'image-registry.openshift-image-registry.svc:5000'
+        IMAGE = "${REGISTRY_HOST}/ac-test/test:latest"}
       steps {
         unstash 'build'
 
