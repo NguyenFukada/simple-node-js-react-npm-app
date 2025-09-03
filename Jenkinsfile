@@ -44,7 +44,7 @@ pipeline {
           # login bằng SA token
           buildah login --tls-verify=false -u unused -p "$TOKEN" "$REGISTRY_HOST"
 
-          buildah --storage-driver=vfs bud --layers \
+          buildah --tls-verify=false --storage-driver=vfs bud --layers \
             -f Dockerfile \
             -t "${IMAGE}" .
             
