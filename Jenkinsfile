@@ -43,8 +43,24 @@ pipeline {
       agent { label 'docker-build' }
       steps {
         unstash 'build'
-        container('kaniko') {
-          sh '/kaniko/executor --force --context=`pwd` --dockerfile=`pwd`/Dockerfile  --destination=nguyenquoccuong/test:latest'
+        container('buildah') {
+          sh '''
+          REGISTRY_HOST="image-registry.openshift-image-registry.svc:5000"
+          TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+
+          # login bằng SA token
+          buildah login -u unused -p "$TOKEN" "$REGISTRY_HOST"
+
+          buildah --storage-driver=vfs bud --layers \
+            -f /gen-source/Dockerfile.gen \
+            -t "${IMAGE}" .
+            
+          # push (OKD nội bộ có thể cần --tls-verify=false nếu dùng cert self-signed)
+          buildah --storage-driver=vfs push \
+            --tls-verify=${TLSVERIFY:-false} \
+            "${IMAGE}" "docker://${IMAGE}"
+
+          '''
         }
       }
     }
