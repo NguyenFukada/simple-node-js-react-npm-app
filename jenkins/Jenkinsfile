@@ -5,7 +5,7 @@ pipeline {
   agent {
     kubernetes {
       // ⚠️ Sửa đúng tên Cloud bạn cấu hình trong Manage Jenkins → Clouds
-      cloud 'kubernetes'                 // ví dụ: 'kubernetes', 'okd-prod', 'okd'
+      cloud 'Kubernetes'                 // ví dụ: 'kubernetes', 'okd-prod', 'okd'
       inheritFrom 's2i-nodejs-fe'        // ⚠️ phải trùng NAME Pod Template trong UI
       serviceAccount 'jenkins'           // dùng SA jenkins, tránh rơi về default
       showRawYaml true                   // in manifest ra console để debug
