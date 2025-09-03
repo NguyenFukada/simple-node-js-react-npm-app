@@ -32,7 +32,7 @@ pipeline {
     }
 
     stage('Build & Push Image') {
-      agent { kubernetes {label 's2i-nodejs-fe'} }
+      agent { kubernetes { inheritFrom 's2i-nodejs-fe'} }
       steps {
         unstash 'build'
         container('buildah') {
@@ -40,7 +40,7 @@ pipeline {
           REGISTRY_HOST="image-registry.openshift-image-registry.svc:5000"
           TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
 
-           # login bằng SA token
+          # login bằng SA token
           buildah login -u unused -p "$TOKEN" "$REGISTRY_HOST"
 
           buildah --storage-driver=vfs bud --layers \
