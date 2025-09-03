@@ -1,114 +1,26 @@
 pipeline {
-  agent none
-
-  parameters {
-    // chỉnh theo app của bạn
-    string(name: 'IMAGE',       defaultValue: 'image-registry.openshift-image-registry.svc:5000/ac-test/test:v1', description: 'Đích push image')
-    string(name: 'BUILDER_IMG', defaultValue: 'image-registry.openshift-image-registry.svc:5000/openshift/nginx:latest', description: 'S2I builder image (vd nginx, nodejs, java,...)')
-    string(name: 'PATH_CONTEXT', defaultValue: '.',   description: 'Context path cho s2i (thư mục nguồn)')
-    string(name: 'SUBDIRECTORY', defaultValue: '.',   description: 'Thư mục con chứa source (nếu có)')
-    string(name: 'OUTPUT_DIR',   defaultValue: 'dist',description: 'Thư mục output (FE build xong)')
-    choice(name: 'FORMAT', choices: ['oci','docker'], description: 'Định dạng image buildah')
-    booleanParam(name: 'TLSVERIFY', defaultValue: false, description: 'Verify TLS khi login/push (false nếu registry dùng self-signed)')
-  }
-
-
-
-
-  stages {
-
-    stage('Checkout') {
-      agent { label 'nodejs-build' }
-      steps {
-        checkout scm
-        stash includes: '**', name: 'source'
-      }
-    }
-
-    stage('Build Node.js') {
-      agent { label 'nodejs-build' } // node có container 'node'
-      environment {
-        NPM_CONFIG_PREFIX = '/tmp/.npm-global'
-        PATH = "/tmp/.npm-global/bin:${env.PATH}"
-      }
-      steps {
-        unstash 'source'
-        container('node') {
-          sh '''
-            set -euxo pipefail
-            node -v && npm -v
-            mkdir -p "$NPM_CONFIG_PREFIX"
-            npm ci --no-audit --no-fund --prefer-offline
-            npm run build || echo "No build script"
-          '''
-        }
-        stash includes: '**', name: 'build'
-      }
-    }
-
-    stage('S2I → Buildah: Build & Push Image') {
-      // kế thừa PodTemplate chứa s2i + buildah + volumes, SA=jenkins
-      agent { kubernetes { inheritFrom 's2i-nodejs-fe' /* serviceAccount 'jenkins' nếu muốn ép ở đây */ } }
-      environment {
-        REGISTRY_HOST = 'image-registry.openshift-image-registry.svc:5000'
-      }
-      steps {
-        unstash 'build'
-
-        // 1) S2I generate Dockerfile.gen (nếu có sẵn dist thì wrap vào nginx s2i)
-        container('s2i') {
-          sh '''
-            set -euxo pipefail
-
-            echo "Context: ${PATH_CONTEXT}  Subdir: ${SUBDIRECTORY}  Output: ${OUTPUT_DIR}"
-            ls -lah
-
-            if [ -d "${SUBDIRECTORY}/${OUTPUT_DIR}" ]; then
-              # Ứng dụng FE đã build xong -> dùng nginx s2i để serve static
-              cat > /gen-source/Dockerfile.gen <<'EOF'
-FROM ${BUILDER_IMG}
-ADD ${SUBDIRECTORY}/${OUTPUT_DIR} /tmp/src
-RUN /usr/libexec/s2i/assemble
-CMD /usr/libexec/s2i/run
-EOF
-            else
-              # Không có dist -> để s2i tự assemble từ source
-              s2i build --as-dockerfile /gen-source/Dockerfile.gen \
-                "${PATH_CONTEXT}" \
-                "${BUILDER_IMG}" \
-                --environment-file /env-vars/env-file || true
-            fi
-
-            echo "=== Generated /gen-source/Dockerfile.gen ==="
-            sed -n '1,120p' /gen-source/Dockerfile.gen || true
-          '''
-        }
-
-        // 2) Buildah build & push
-        container('buildah') {
-          sh '''
-            set -euxo pipefail
-
-            # Chặn lỗi IMAGE rỗng
-            : "${IMAGE:?IMAGE is empty. Provide -p IMAGE=... or set parameter.}"
-
-            # Login registry bằng SA token
-            TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
-            buildah login --tls-verify=${TLSVERIFY} -u unused -p "$TOKEN" "$REGISTRY_HOST"
-
-            # Build từ Dockerfile.gen do S2I tạo
-            buildah --storage-driver=vfs bud --tls-verify=${TLSVERIFY} --layers \
-              --format=${FORMAT} \
-              -f /gen-source/Dockerfile.gen \
-              -t "${IMAGE}" .
-
-            # Push image
-            buildah --storage-driver=vfs push \
-              --tls-verify=${TLSVERIFY} \
-              "${IMAGE}" "docker://${IMAGE}"
-          '''
-        }
-      }
+    agent any
+    stages {
+        stage('S2I → Buildah (smoke)') {
+  agent {
+    kubernetes {
+      // ⚠️ Sửa đúng tên Cloud bạn cấu hình trong Manage Jenkins → Clouds
+      cloud 'kubernetes'                 // ví dụ: 'kubernetes', 'okd-prod', 'okd'
+      inheritFrom 's2i-nodejs-fe'        // ⚠️ phải trùng NAME Pod Template trong UI
+      serviceAccount 'jenkins'           // dùng SA jenkins, tránh rơi về default
+      showRawYaml true                   // in manifest ra console để debug
     }
   }
+  options { timeout(time: 10, unit: 'MINUTES') }
+  steps {
+    container('s2i') {
+      sh 'echo S2I container OK; whoami; pwd'
+    }
+    container('buildah') {
+      sh 'echo Buildah container OK'
+    }
+  }
+}
+
+    }
 }
