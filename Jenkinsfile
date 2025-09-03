@@ -35,6 +35,26 @@ pipeline {
       agent { kubernetes { inheritFrom 's2i-nodejs-fe'} }
       steps {
         unstash 'build'
+        container('s2i') {
+      sh '''
+        set -euxo pipefail
+        if [ -d "./dist" ]; then
+          cat > /gen-source/Dockerfile.gen <<'EOF'
+FROM image-registry.openshift-image-registry.svc:5000/openshift/nginx:latest
+ADD ./dist /tmp/src
+RUN /usr/libexec/s2i/assemble
+CMD /usr/libexec/s2i/run
+EOF
+        else
+          s2i build --as-dockerfile /gen-source/Dockerfile.gen . \
+            image-registry.openshift-image-registry.svc:5000/openshift/nginx:latest \
+            --environment-file /env-vars/env-file || true
+        fi
+      '''
+    }
+
+
+
         container('buildah') {
           sh '''
           REGISTRY_HOST="image-registry.openshift-image-registry.svc:5000"
