@@ -12,6 +12,11 @@ pipeline {
     booleanParam(name: 'TLSVERIFY', defaultValue: false, description: 'Verify TLS khi login/push (false nếu registry dùng self-signed)')
   }
 
+
+
+
+  stages {
+
     stage('Checkout') {
       agent { label 'nodejs-build' }
       steps {
@@ -20,8 +25,6 @@ pipeline {
       }
     }
 
-
-  stages {
     stage('Build Node.js') {
       agent { label 'nodejs-build' } // node có container 'node'
       environment {
