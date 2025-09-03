@@ -41,7 +41,7 @@ pipeline {
           TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
 
           # login bằng SA token
-          buildah login -u unused -p "$TOKEN" "$REGISTRY_HOST"
+          buildah login --tls-verify=false -u unused -p "$TOKEN" "$REGISTRY_HOST"
 
           buildah --storage-driver=vfs bud --layers \
             -f /gen-source/Dockerfile.gen \
